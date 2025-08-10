@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 10px;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #4267B2, #365899);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e1e5e9;
+        }
+
+        .card-header {
+            background: #28a745;
+            color: white;
+            padding: 10px 15px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .card-header.search { background: #4267B2; }
+        .card-header.series { background: #ff6b35; }
+        .card-header.action { background: #17a2b8; }
+
+        /* Search section */
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4267B2;
+            background: white;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .radio-item input[type="radio"] {
+            margin: 0;
+        }
+
+        .radio-item label {
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #4267B2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #365899;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        /* Suggestions */
+        .suggestions {
+            margin-top: 10px;
+        }
+
+        .suggestion-item {
+            background: #e3f2fd;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            text-align: left;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background: #bbdefb;
+        }
+
+        /* Results section */
+        .poster-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .poster {
+            max-width: 150px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .no-poster {
+            padding: 40px 20px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .info-text {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e1e5e9;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        /* Series controls */
+        .series-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-group {
+            flex: 1;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .control-group input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e1e5e9;
+            border-radius: 4px;
+            background: #f8f9fa;
+            font-size: 12px;
+        }
+
+        .control-group input:focus {
+            outline: none;
+            border-color: #ff6b35;
+            background: white;
+        }
+
+        /* Loading and error states */
+        .loading {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 480px) {
+            .container {
+                padding: 5px;
+            }
+            
+            .card {
+                padding: 12px;
+            }
+            
+            .header h1 {
+                font-size: 16px;
+            }
+        }
+
+        /* Scrollbar styling */
+        .info-text::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .info-text::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .info-text::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .info-text::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* Touch-friendly enhancements */
+        .btn, .suggestion-item {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .suggestion-item {
+            justify-content: flex-start;
+        }
+
+        /* Carousel styles */
+        .carousel-container {
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .carousel-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.3s ease;
+            gap: 12px;
+            padding: 10px 0;
+        }
+
+        .carousel-item {
+            flex: 0 0 140px;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .carousel-item:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .carousel-poster-container {
+            width: 100%;
+            height: 200px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .carousel-poster {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .carousel-poster-placeholder {
+            font-size: 11px;
+            color: #6c757d;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .carousel-info {
+            padding: 12px;
+        }
+
+        .carousel-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 6px;
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .carousel-details {
+            font-size: 10px;
+            color: #666;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .carousel-year {
+            color: #4267B2;
+            font-weight: 600;
+        }
+
+        .carousel-quality {
+            background: #28a745;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* Navigation arrows */
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e1e5e9;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .carousel-nav:hover {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav.prev {
+            left: -20px;
+        }
+
+        .carousel-nav.next {
+            right: -20px;
+        }
+
+        .carousel-nav svg {
+            width: 16px;
+            height: 16px;
+            fill: #333;
+        }
+
+        .carousel-nav.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .carousel-nav.disabled:hover {
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Scrollbar for touch devices */
+        .carousel-track::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .carousel-track::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 2px;
+        }
+
+        .carousel-track::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 2px;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 480px) {
+            .carousel-item {
+                flex: 0 0 120px;
+            }
+            
+            .carousel-poster-container {
+                height: 180px;
+            }
+            
+            .carousel-nav {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .carousel-nav.prev {
+                left: -17px;
+            }
+            
+            .carousel-nav.next {
+                right: -17px;
+            }
+        }
+
+        /* Loading state for carousel */
+        .carousel-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 280px;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>MOVIE EXPLORER</h1>
+        </div>
+
+        <!-- Search Section -->
+        <div class="card">
+            <div class="card-header search">Search Movies & TV Shows</div>
+            
+            <input type="text" id="searchInput" class="search-input" placeholder="Enter movie or TV show title...">
+            
+            <div class="radio-group">
+                <div class="radio-item">
+                    <input type="radio" id="titleSearch" name="searchMode" value="title" checked>
+                    <label for="titleSearch">Search by Title</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" id="idSearch" name="searchMode" value="id">
+                    <label for="idSearch">Search by IMDb ID</label>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="performSearch()">SEARCH</button>
+            
+            <div id="suggestions" class="suggestions"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsCard" class="card hidden">
+            <div class="card-header">Movie Details</div>
+            
+            <div class="poster-container">
+                <div id="posterContainer">
+                    <div class="no-poster">Poster will appear here</div>
+                </div>
+            </div>
+            
+            <div id="infoText" class="info-text">Movie information will appear here...</div>
+        </div>
+
+        <!-- Series Controls -->
+        <div id="seriesCard" class="card hidden">
+            <div class="card-header series">Episode Selection</div>
+            
+            <div class="series-controls">
+                <div class="control-group">
+                    <label for="seasonInput">Season:</label>
+                    <input type="number" id="seasonInput" min="1" max="99" value="1">
+                </div>
+                <div class="control-group">
+                    <label for="episodeInput">Episode:</label>
+                    <input type="number" id="episodeInput" min="1" max="99" value="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div id="actionCard" class="card hidden">
+            <button class="btn btn-success" onclick="openInBrowser()">OPEN IN BROWSER</button>
+        </div>
+
+        <!-- Latest Movies Section -->
+        <div class="card">
+            <div class="card-header">Latest Movies (1080p)</div>
+            <div id="latestMovies" class="carousel-container">
+                <div class="carousel-loading">Loading latest movies...</div>
+            </div>
+        </div>
+
+        <!-- Latest TV Shows Section -->
+        <div class="card">
+            <div class="card-header series">Latest TV Shows</div>
+            <div id="latestTVShows" class="carousel-container">
+                <div class="carousel-loading">Loading latest TV shows...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = '70a75be8';
+        const OMDB_URL = 'https://www.omdbapi.com/';
+        
+        let currentImdbId = null;
+        let currentType = null;
+        let searchTimeout = null;
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const titleRadio = document.getElementById('titleSearch');
+            const idRadio = document.getElementById('idSearch');
+
+            // Auto-complete on input
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(autoComplete, 300);
+            });
+
+            // Clear suggestions when switching to ID search
+            titleRadio.addEventListener('change', function() {
+                if (!this.checked) clearSuggestions();
+            });
+            
+            idRadio.addEventListener('change', function() {
+                if (this.checked) clearSuggestions();
+            });
+
+            // Enter key to search
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            // Load latest content
+            loadLatestMovies();
+            loadLatestTVShows();
+        });
+
+        function autoComplete() {
+            const query = document.getElementById('searchInput').value.trim();
+            const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
+            
+            if (searchMode !== 'title' || query.length < 3) {
+                clearSuggestions();
+                return;
+            }
+
+            const params = new URLSearchParams({
+                apikey: API_KEY,
+                s: query
+            });
+
+            fetch(`${OMDB_URL}?${params}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.Response === 'True') {
+                        showSuggestions(data.Search.slice(0, 3));
+                    } else {
+                        clearSuggestions();
+                    }
+                })
+                .catch(() => clearSuggestions());
+        }
+
+        function showSuggestions(suggestions) {
+            const container = document.getElementById('suggestions');
+            container.innerHTML = '';
+
+            suggestions.forEach(item => {
+                const button = document.createElement('button');
+                button.className = 'suggestion-item';
+                button.textContent = `${item.Title} (${item.Year})`;
+                button.onclick = () => selectSuggestion(item.Title);
+                container.appendChild(button);
+            });
+        }
+
+        function clearSuggestions() {
+            document.getElementById('suggestions').innerHTML = '';
+        }
+
+        function selectSuggestion(title) {
+            document.getElementById('searchInput').value = title;
+            clearSuggestions();
+            performSearch();
+        }
+
+        function performSearch() {
+            // Hide previous results
+            hideResults();
+            
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('Please enter a search term');
+                return;
+            }
+
+            const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
+            const params = new URLSearchParams({
+                apikey: API_KEY
+            });
+
+            if (searchMode === 'title') {
+                params.append('t', query);
+            } else {
+                params.append('i', query);
+            }
+
+            // Show loading
+            const infoText = document.getElementById('infoText');
+            infoText.textContent = 'Searching...';
+            document.getElementById('resultsCard').classList.remove('hidden');
+
+            fetch(`${OMDB_URL}?${params}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.Response === 'False') {
+                        alert(`Search failed: ${data.Error}`);
+                        hideResults();
+                        return;
+                    }
+
+                    displayResults(data);
+                    currentImdbId = data.imdbID;
+                    currentType = data.Type;
+
+                    // Show appropriate controls
+                    document.getElementById('resultsCard').classList.remove('hidden');
+                    if (currentType === 'series') {
+                        document.getElementById('seriesCard').classList.remove('hidden');
+                    }
+                    document.getElementById('actionCard').classList.remove('hidden');
+
+                    // Clear suggestions
+                    clearSuggestions();
+
+                    // Scroll to results
+                    setTimeout(() => {
+                        document.getElementById('resultsCard').scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }, 100);
+                })
+                .catch(error => {
+                    alert('Network error: Unable to connect to OMDb API');
+                    hideResults();
+                });
+        }
+
+        function displayResults(data) {
+            // Display poster
+            const posterContainer = document.getElementById('posterContainer');
+            const posterUrl = data.Poster;
+            
+            if (posterUrl && posterUrl !== 'N/A') {
+                posterContainer.innerHTML = `<img src="${posterUrl}" alt="${data.Title}" class="poster">`;
+            } else {
+                posterContainer.innerHTML = '<div class="no-poster">No poster available</div>';
+            }
+
+            // Display information
+            const infoFields = [
+                ['Title', data.Title],
+                ['Year', data.Year],
+                ['Type', data.Type ? data.Type.charAt(0).toUpperCase() + data.Type.slice(1) : ''],
+                ['Released', data.Released],
+                ['Genre', data.Genre],
+                ['Director', data.Director],
+                ['Writer', data.Writer],
+                ['Cast', data.Actors],
+                ['IMDb Rating', data.imdbRating],
+                ['Runtime', data.Runtime],
+                ['Language', data.Language],
+                ['Country', data.Country],
+                ['Awards', data.Awards],
+                ['IMDb ID', data.imdbID]
+            ];
+
+            let infoText = '';
+            infoFields.forEach(([field, value]) => {
+                if (value && value !== 'N/A') {
+                    infoText += `${field}: ${value}\n\n`;
+                }
+            });
+
+            // Add plot
+            if (data.Plot && data.Plot !== 'N/A') {
+                infoText += `Plot:\n${data.Plot}\n\n`;
+            }
+
+            // Add ratings
+            if (data.Ratings && data.Ratings.length > 0) {
+                infoText += 'Ratings:\n';
+                data.Ratings.forEach(rating => {
+                    if (rating.Source && rating.Value) {
+                        infoText += `  ${rating.Source}: ${rating.Value}\n`;
+                    }
+                });
+            }
+
+            document.getElementById('infoText').textContent = infoText;
+        }
+
+        function hideResults() {
+            document.getElementById('resultsCard').classList.add('hidden');
+            document.getElementById('seriesCard').classList.add('hidden');
+            document.getElementById('actionCard').classList.add('hidden');
+            currentImdbId = null;
+            currentType = null;
+        }
+
+        function buildVidsrcUrl() {
+            if (!currentImdbId) return '';
+
+            if (currentType === 'movie') {
+                return `https://vidsrc.me/embed/movie?imdb=${currentImdbId}`;
+            } else if (currentType === 'series') {
+                const season = document.getElementById('seasonInput').value;
+                const episode = document.getElementById('episodeInput').value;
+                return `https://vidsrc.me/embed/tv?imdb=${currentImdbId}&season=${season}&episode=${episode}`;
+            }
+            return '';
+        }
+
+        function openInBrowser() {
+            const url = buildVidsrcUrl();
+            if (url) {
+                try {
+                    window.open(url, '_blank');
+                    // For mobile browsers that might block popups
+                    setTimeout(() => {
+                        if (!document.hasFocus()) {
+                            alert('If the page did not open, please allow popups for this site');
+                        }
+                    }, 1000);
+                } catch (error) {
+                    alert('Unable to open link. Please check your browser settings.');
+                }
+            }
+        }
+
+        async function loadLatestMovies() {
+            const container = document.getElementById('latestMovies');
+            
+            try {
+                // Replace with your actual JSON API endpoint for movies
+                const response = await fetch('https://vidsrc.xyz/movies/latest/page-1.json');
+                const data = await response.json();
+                
+                if (data.result && data.result.length > 0) {
+                    container.innerHTML = '';
+                    const carousel = createCarousel('movies', data.result.slice(0, 15));
+                    container.appendChild(carousel);
+                } else {
+                    container.innerHTML = '<div class="carousel-loading">No movies available</div>';
+                }
+            } catch (error) {
+                console.error('Error loading latest movies:', error);
+                container.innerHTML = '<div class="carousel-loading">Error loading movies</div>';
+            }
+        }
+
+        async function loadLatestTVShows() {
+            const container = document.getElementById('latestTVShows');
+            
+            try {
+                // Replace with your actual JSON API endpoint for TV shows
+                const response = await fetch('https://vidsrc.xyz/tvshows/latest/page-1.json');
+                const data = await response.json();
+                
+                if (data.result && data.result.length > 0) {
+                    container.innerHTML = '';
+                    const carousel = createCarousel('tvshows', data.result.slice(0, 15));
+                    container.appendChild(carousel);
+                } else {
+                    container.innerHTML = '<div class="carousel-loading">No TV shows available</div>';
+                }
+            } catch (error) {
+                console.error('Error loading latest TV shows:', error);
+                container.innerHTML = '<div class="carousel-loading">Error loading TV shows</div>';
+            }
+        }
+
+        function createCarousel(id, items) {
+            const carouselWrapper = document.createElement('div');
+            carouselWrapper.className = 'carousel-wrapper';
+            
+            // Create navigation arrows
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'carousel-nav prev';
+            prevBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
+            
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'carousel-nav next';
+            nextBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>';
+            
+            // Create carousel track
+            const carouselTrack = document.createElement('div');
+            carouselTrack.className = 'carousel-track';
+            carouselTrack.id = `carousel-${id}`;
+            
+            // Populate items
+            populateCarouselItems(carouselTrack, items);
+            
+            // Assemble carousel
+            carouselWrapper.appendChild(prevBtn);
+            carouselWrapper.appendChild(carouselTrack);
+            carouselWrapper.appendChild(nextBtn);
+            
+            // Add navigation functionality
+            setupCarouselNavigation(carouselTrack, prevBtn, nextBtn);
+            
+            return carouselWrapper;
+        }
+
+        async function populateCarouselItems(track, items) {
+            for (const item of items) {
+                const carouselItem = await createCarouselItem(item);
+                track.appendChild(carouselItem);
+            }
+        }
+
+        async function createCarouselItem(item) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'carousel-item';
+            
+            // Extract title and year from the title field
+            const titleMatch = item.title.match(/^(.+?)\s+(\d{4})$/);
+            const title = titleMatch ? titleMatch[1] : item.title;
+            const year = titleMatch ? titleMatch[2] : '';
+            
+            // Get poster from OMDb API
+            let posterHtml = '<div class="carousel-poster-placeholder">No Image</div>';
+            
+            try {
+                const omdbResponse = await fetch(`${OMDB_URL}?apikey=${API_KEY}&i=${item.imdb_id}`);
+                const omdbData = await omdbResponse.json();
+                
+                if (omdbData.Response === 'True' && omdbData.Poster && omdbData.Poster !== 'N/A') {
+                    posterHtml = `<img src="${omdbData.Poster}" alt="${title}" class="carousel-poster">`;
+                }
+            } catch (error) {
+                console.error('Error fetching poster:', error);
+            }
+            
+            itemDiv.innerHTML = `
+                <div class="carousel-poster-container">
+                    ${posterHtml}
+                </div>
+                <div class="carousel-info">
+                    <div class="carousel-title" title="${title}">${title}</div>
+                    <div class="carousel-details">
+                        <span class="carousel-year">${year}</span>
+                        <span class="carousel-quality">${item.quality}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Make it clickable
+            itemDiv.addEventListener('click', () => {
+                window.open(item.embed_url, '_blank');
+            });
+            
+            return itemDiv;
+        }
+
+        function setupCarouselNavigation(track, prevBtn, nextBtn) {
+            let currentOffset = 0;
+            const itemWidth = 152; // 140px item + 12px gap
+            
+            // Touch/swipe variables
+            let startX = 0;
+            let currentX = 0;
+            let isDragging = false;
+            let startOffset = 0;
+            let animationId = null;
+            
+            function updateNavButtons() {
+                const maxOffset = Math.max(0, (track.children.length * itemWidth) - track.parentElement.offsetWidth);
+                prevBtn.classList.toggle('disabled', currentOffset <= 0);
+                nextBtn.classList.toggle('disabled', currentOffset >= maxOffset);
+            }
+            
+            function scrollCarousel(direction) {
+                const containerWidth = track.parentElement.offsetWidth;
+                const visibleItems = Math.floor(containerWidth / itemWidth);
+                const scrollAmount = visibleItems * itemWidth;
+                
+                if (direction === 'prev' && currentOffset > 0) {
+                    currentOffset = Math.max(0, currentOffset - scrollAmount);
+                } else if (direction === 'next') {
+                    const maxOffset = Math.max(0, (track.children.length * itemWidth) - containerWidth);
+                    currentOffset = Math.min(maxOffset, currentOffset + scrollAmount);
+                }
+                
+                track.style.transform = `translateX(-${currentOffset}px)`;
+                updateNavButtons();
+            }
+            
+            function snapToNearestItem() {
+                const maxOffset = Math.max(0, (track.children.length * itemWidth) - track.parentElement.offsetWidth);
+                const nearestItem = Math.round(currentOffset / itemWidth);
+                currentOffset = Math.min(Math.max(0, nearestItem * itemWidth), maxOffset);
+                track.style.transform = `translateX(-${currentOffset}px)`;
+                updateNavButtons();
+            }
+            
+            // Touch event handlers
+            function handleTouchStart(e) {
+                const touch = e.touches ? e.touches[0] : e;
+                startX = touch.clientX;
+                startOffset = currentOffset;
+                isDragging = true;
+                
+                // Cancel any ongoing animation
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+                
+                // Remove transition for smooth dragging
+                track.style.transition = 'none';
+            }
+            
+            function handleTouchMove(e) {
+                if (!isDragging) return;
+                
+                e.preventDefault();
+                const touch = e.touches ? e.touches[0] : e;
+                currentX = touch.clientX;
+                const deltaX = startX - currentX;
+                const newOffset = startOffset + deltaX;
+                
+                // Apply some resistance at the boundaries
+                const maxOffset = Math.max(0, (track.children.length * itemWidth) - track.parentElement.offsetWidth);
+                
+                if (newOffset < 0) {
+                    // Left boundary - add resistance
+                    currentOffset = newOffset * 0.3;
+                } else if (newOffset > maxOffset) {
+                    // Right boundary - add resistance
+                    const overflow = newOffset - maxOffset;
+                    currentOffset = maxOffset + overflow * 0.3;
+                } else {
+                    currentOffset = newOffset;
+                }
+                
+                track.style.transform = `translateX(-${currentOffset}px)`;
+            }
+            
+            function handleTouchEnd(e) {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                
+                // Re-enable transitions
+                track.style.transition = 'transform 0.3s ease';
+                
+                // Calculate swipe velocity and direction
+                const deltaX = startX - currentX;
+                const swipeThreshold = 50;
+                const maxOffset = Math.max(0, (track.children.length * itemWidth) - track.parentElement.offsetWidth);
+                
+                // Snap back if at boundaries
+                if (currentOffset < 0) {
+                    currentOffset = 0;
+                } else if (currentOffset > maxOffset) {
+                    currentOffset = maxOffset;
+                } else if (Math.abs(deltaX) > swipeThreshold) {
+                    // Significant swipe - move by one page
+                    const containerWidth = track.parentElement.offsetWidth;
+                    const visibleItems = Math.floor(containerWidth / itemWidth);
+                    const scrollAmount = visibleItems * itemWidth;
+                    
+                    if (deltaX > 0) {
+                        // Swiped left - go to next
+                        currentOffset = Math.min(maxOffset, currentOffset + scrollAmount);
+                    } else {
+                        // Swiped right - go to previous
+                        currentOffset = Math.max(0, currentOffset - scrollAmount);
+                    }
+                } else {
+                    // Small movement - snap to nearest item
+                    snapToNearestItem();
+                    return;
+                }
+                
+                track.style.transform = `translateX(-${currentOffset}px)`;
+                updateNavButtons();
+            }
+            
+            // Add touch event listeners
+            track.addEventListener('touchstart', handleTouchStart, { passive: false });
+            track.addEventListener('touchmove', handleTouchMove, { passive: false });
+            track.addEventListener('touchend', handleTouchEnd);
+            
+            // Add mouse event listeners for desktop dragging
+            track.addEventListener('mousedown', handleTouchStart);
+            track.addEventListener('mousemove', handleTouchMove);
+            track.addEventListener('mouseup', handleTouchEnd);
+            track.addEventListener('mouseleave', handleTouchEnd);
+            
+            // Prevent context menu on long press
+            track.addEventListener('contextmenu', (e) => {
+                if (isDragging) e.preventDefault();
+            });
+            
+            // Button navigation
+            prevBtn.addEventListener('click', () => scrollCarousel('prev'));
+            nextBtn.addEventListener('click', () => scrollCarousel('next'));
+            
+            // Initialize nav buttons
+            setTimeout(updateNavButtons, 100);
+            
+            // Update on window resize
+            window.addEventListener('resize', updateNavButtons);
+        }
+    </script>
+</body>
+</html>
